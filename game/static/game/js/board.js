@@ -1495,36 +1495,56 @@
                 gameLayout.style.visibility = 'visible';
             };
 
+            
             if (welcomeAIBtn) welcomeAIBtn.onclick = () => {
+                modeSelection.style.display = 'none';
+                pveOptions.style.display = 'flex';
+
                 const whiteInput = document.getElementById('whiteNameInput');
                 const blackInput = document.getElementById('blackNameInput');
                 const errorDiv = document.getElementById('nameError');
-                
-                // Show ONLY white input for AI mode
+
                 if (whiteInput) {
                     whiteInput.style.display = 'block';
                     whiteInput.placeholder = 'Your Name';
-                    whiteInput.value = '';
                     whiteInput.classList.remove('input-error');
                 }
+
                 if (blackInput) {
                     blackInput.style.display = 'none';
                     blackInput.value = 'AI';
                     blackInput.classList.remove('input-error');
                 }
-                
-                // Hide error
-                if (errorDiv) errorDiv.style.display = 'none';
-                
-                nameInputs.style.display = 'flex';
-                modeSelection.style.display = 'none';
-                pveOptions.style.display = 'flex';
-            };
 
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+
+                nameInputs.style.display = 'flex';
+            };
+            
+            
             if (backToModes) backToModes.onclick = () => {
                 prepareWelcomeForPvP(false);
-            };
 
+                const whiteInput = document.getElementById('whiteNameInput');
+                const blackInput = document.getElementById('blackNameInput');
+                const errorDiv = document.getElementById('nameError');
+
+                if (whiteInput) {
+                    whiteInput.placeholder = 'White Player Name';
+                    whiteInput.classList.remove('input-error');
+                }
+
+                if (blackInput) {
+                    blackInput.style.display = 'block';
+                    blackInput.classList.remove('input-error');
+                }
+
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            };
             const colorBtns = pveOptions.querySelectorAll('.color-choice');
             colorBtns.forEach(btn => {
                 btn.onclick = () => {
@@ -1762,25 +1782,35 @@
             };
 
             // Theme Switcher
-            const themeBtns = document.querySelectorAll('.theme-btn');
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'classic';
-            themeBtns.forEach(btn => {
-                if (btn.dataset.theme === currentTheme) {
-                    btn.classList.add('active');
-                    btn.setAttribute('aria-pressed', 'true');
-                }
-                btn.onclick = () => {
-                    const theme = btn.dataset.theme;
-                    document.documentElement.setAttribute('data-theme', theme);
-                    localStorage.setItem('chessBoardTheme', theme);
-                    themeBtns.forEach(b => {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.classList.add('active');
-                    btn.setAttribute('aria-pressed', 'true');
-                };
-            });
+            function initThemeSwitcher() {
+                const themeBtns = document.querySelectorAll('.theme-btn');
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'classic';
+                document.documentElement.setAttribute('data-theme', currentTheme);
+
+                themeBtns.forEach(btn => {
+                    if (btn.dataset.theme === currentTheme) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-pressed', 'true');
+                    }
+                    btn.onclick = () => {
+                        const theme = btn.dataset.theme;
+                        document.documentElement.setAttribute('data-theme', theme);
+                        localStorage.setItem('chessBoardTheme', theme);
+                        themeBtns.forEach(b => {
+                            b.classList.remove('active');
+                            b.setAttribute('aria-pressed', 'false');
+                        });
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-pressed', 'true');
+                    };
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initThemeSwitcher);
+            } else {
+                initThemeSwitcher();
+            }
 
     document.addEventListener('visibilitychange', async() => {
         if (document.hidden) {
@@ -1923,7 +1953,58 @@
                     }
                 });
             }
-            
+            function showAssetWarning() {
+                const t = document.getElementById('confirmTimerContainer');
+                const d = document.getElementById('confirmDifficultyContainer');
+                if (t) t.style.display = 'none';
+                if (d) d.style.display = 'none';
+
+                // 1. Pause the timer while the alert is open
+                if (!paused && typeof pauseGame === 'function') {
+                    pauseGame().catch(() => {}); // Catch prevents crash if backend hasn't initialized
+                }
+
+                showConfirm( //the message on alert
+                    "⚠️ Assets Blocked",
+                    "<div style='line-height: 1.5; font-size: 0.95rem;'>The chess pieces failed to load.<br><br>Please check your browser permissions (allow images) or disable any ad-blockers on this site.</div>",
+                    () => { 
+                        // 2. Set a memory flag to bypass the main menu on reload
+                        sessionStorage.setItem('checkoraAutoResume', 'true');
+                        window.location.reload(); 
+                    },
+                    '#f0c040'
+                );
+                
+                const yesBtn = document.getElementById('confirmYesBtn');
+                const noBtn = document.getElementById('confirmNoBtn');
+                if (yesBtn) yesBtn.textContent = 'Reload Page';
+                
+                // 3. Resume the timer if they click Close
+                if (noBtn) {
+                    noBtn.textContent = 'Close';
+                    const defaultClose = noBtn.onclick; 
+                    noBtn.onclick = () => {
+                        if (defaultClose) defaultClose();
+                        if (paused && typeof resumeGame === 'function') {
+                            resumeGame().catch(() => {});
+                        }
+                    };
+                }
+            }            function checkAssets() {
+                const img = document.querySelector('.piece');
+                
+                // If a piece exists in the HTML but still has 0 width after 2 seconds, Chrome blocked it.
+                if (img && img.naturalWidth === 0) {
+                    if (!window.assetWarningShown) {
+                        window.assetWarningShown = true;
+                        showAssetWarning();
+                    }
+                }
+            }
+
+            // Wait exactly 2 seconds after the script loads to check the assets
+            // This gives normal connections plenty of time to load, while catching strict blockers.
+            setInterval(checkAssets, 5000);
 
           if (typeof module !== "undefined" && module.exports) {
           module.exports = { pColor, getSquareLabel, formatTime };
