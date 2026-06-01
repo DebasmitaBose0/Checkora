@@ -29,7 +29,7 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-for-local-testing')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-IS_PRODUCTION = bool(os.environ.get('VERCEL'))
+IS_PRODUCTION = os.environ.get('VERCEL_ENV') == 'production'
 if IS_PRODUCTION:
     DEBUG = False
 else:
