@@ -3512,17 +3512,16 @@
 
                 const key = e.key.toLowerCase();
                 const hasBlockingOverlay =
-                    document.querySelector(
-                        '.modal.show, [role="dialog"]:not([hidden]), .promo-overlay.active'
-                    ) ||
-                    (shareModal?.style.display && shareModal.style.display !== 'none') ||
-                    (rulebookModal?.style.display && rulebookModal.style.display !== 'none') ||
-                    fenOverlay?.classList.contains('active') ||
-                    confirmOverlay?.classList.contains('active') ||
-                    drawOverlay?.classList.contains('active') ||
-                    gameOverOverlay?.classList.contains('active') ||
-                    welcomeOverlay?.classList.contains('active');
-
+                (shareModal?.style.display === 'flex') ||
+                (rulebookModal?.style.display === 'flex') ||
+                fenOverlay?.classList.contains('active') ||
+                promoOverlay?.classList.contains('active') ||
+                confirmOverlay?.classList.contains('active') ||
+                drawOverlay?.classList.contains('active') ||
+                (document.getElementById('sideModal')?.style.display === 'flex') ||
+                (document.getElementById('leaveConfirmOverlay')?.style.display === 'flex') ||
+                gameOverOverlay?.classList.contains('active') ||
+                welcomeOverlay?.classList.contains('active');
             // Allow Escape to close overlays
             if (hasBlockingOverlay && key !== 'escape') {
                 return;
@@ -3561,6 +3560,14 @@
 
                     if (fenOverlay?.classList.contains('active')) {
                         fenOverlay.classList.remove('active');
+                    }
+                }else if (key === 'h') {
+                    e.preventDefault();
+                    const exitBtn = document.getElementById('exitToMenuBtn');
+                    if (exitBtn) {
+                        exitBtn.click();
+                    } else {
+                        openWelcomeForNewGame();
                     }
                 }
             });
