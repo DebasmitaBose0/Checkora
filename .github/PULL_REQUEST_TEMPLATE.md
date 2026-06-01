@@ -1,32 +1,33 @@
-## Description
+# ♟️ Checkora Pull Request Template
 
-Brief description of the changes in this PR.
+## 📝 Related Issue
+Closes #
 
-## Type of Change
+## 📋 Summary
+Provide a concise explanation of the problem solved, architectural implications, or visual improvements implemented in this contribution.
 
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation update
+## 🛠️ Changes Made
+- **Component / Module**: Detailed change description.
+- **Component / Module**: Another specific change.
+- Highlight any backward compatibility concerns or configurations modified.
 
-## Related Issue
+## 🧪 Verification & Testing Strategy
+Detail the automated and manual testing steps executed locally to prove your changes work.
 
-Fixes #(issue number)
+### Automated Tests Run
+- [ ] Django test suite: `python manage.py test`
+- [ ] Code formatting & lint verification: `flake8`
+- [ ] JavaScript console errors checked: `[Yes/No/NA]`
 
-## Checklist
+### Manual Verification Performed
+- [ ] UI responsiveness tested on multiple viewport sizes (Mobile, Desktop).
+- [ ] Accessibility markup (ARIA labels, keyboard navigation) audited.
 
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code where necessary
-- [ ] I have updated the documentation if needed
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix/feature works
-- [ ] New and existing tests pass locally
+## 📸 Visual Artifacts (If Applicable)
+*Attach screenshots or screencasts demonstrating visual layout transitions or micro-interactions.*
 
-## Screenshots (if applicable)
-
-Add screenshots to demonstrate visual changes.
-
-## Additional Notes
-
-Any additional information reviewers should know.
+## 📈 Checklist
+- [ ] My code conforms with the project's coding conventions and guidelines.
+- [ ] I have completed a self-review of my code.
+- [ ] I have kept comments minimal and clean, updating documentation where relevant.
+- [ ] The change is fully isolated to the specified problem without bleed.
