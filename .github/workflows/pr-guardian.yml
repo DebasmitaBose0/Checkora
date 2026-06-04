@@ -77,45 +77,79 @@ jobs:
               labels: [label],
             });
 
-            let detail;
+            const discordInvite = 'https://discord.gg/DvW3xVXw8g';
+            const readmeDiscord = `https://github.com/${owner}/${repo}#-1-join-our-discord-community`;
+
+            let reasonTitle;
+            let reasonQuote;
+            let steps;
+
             if (reason === 'no_issue_linked') {
-              detail = [
-                'This pull request does not reference an issue (expected format: `Fixes #123` in the description).',
-                '',
-                '**What to do:**',
-                '1. Ask a maintainer to assign you to an open issue.',
-                '2. Open a new PR that links that issue and lists you as the assignee.',
-              ].join('\n');
+              reasonTitle = 'No linked issue';
+              reasonQuote =
+                'This pull request does not reference an issue. Use the PR template format, e.g. **`Fixes #123`**, in the description.';
+              steps = [
+                'Pick an **open issue** you want to work on (or ask a maintainer for one).',
+                'Get **assigned** to that issue on GitHub.',
+                'Open a **new PR** with `Fixes #<issue-number>` and confirm you appear under **Assignees**.',
+              ];
             } else if (reason.includes('unassigned')) {
               const issueNum = reason.match(/issue_(\d+)_/)?.[1] || '?';
-              detail = [
-                `Issue #${issueNum} is not assigned to anyone.`,
-                '',
-                '**What to do:**',
-                `1. Comment on issue #${issueNum} and ask to be assigned (or wait for a maintainer to assign you).`,
-                '2. After you are assigned, open a new PR with `Fixes #' + issueNum + '` in the description.',
-              ].join('\n');
+              reasonTitle = `Issue #${issueNum} has no assignee`;
+              reasonQuote =
+                `Linked issue **#${issueNum}** is not assigned to anyone yet. PRs should only be opened for issues that are assigned.`;
+              steps = [
+                `Comment on **issue #${issueNum}** and request assignment (or wait for a maintainer).`,
+                'After you are listed under **Assignees**, open a **new PR** with `Fixes #' + issueNum + '`.',
+              ];
             } else {
               const issueNum = reason.match(/issue_(\d+)_/)?.[1] || '?';
-              detail = [
-                `@${author} is not assigned to issue #${issueNum}. Only the issue assignee should open a PR for that issue.`,
-                '',
-                '**What to do:**',
-                `1. Get assigned to issue #${issueNum} before contributing.`,
-                '2. Open a new PR once you appear under **Assignees** on the issue.',
-              ].join('\n');
+              reasonTitle = 'Assignee mismatch';
+              reasonQuote =
+                `@${author} is **not assigned** to issue **#${issueNum}**. Only the person assigned to an issue should open a PR for it.`;
+              steps = [
+                `Get assigned to **issue #${issueNum}** before opening a PR.`,
+                'Verify your username appears under **Assignees** on the issue page.',
+                'Then open a **new PR** with `Fixes #' + issueNum + '` in the description.',
+              ];
             }
+
+            const stepsBlock = steps
+              .map((step, i) => `${i + 1}. ${step}`)
+              .join('\n');
 
             const marker = '<!-- pr-guardian -->';
             const body = [
               marker,
-              '## PR closed by PR Guardian',
+              '## 🛡️ PR closed by PR Guardian',
               '',
-              detail,
+              '| | |',
+              '|:---|:---|',
+              `| **Status** | Closed automatically |`,
+              `| **Reason** | ${reasonTitle} |`,
+              `| **Author** | @${author} |`,
               '',
-              'CI and Vercel preview deployments are not run for PRs that bypass issue assignment.',
+              '### 📋 What happened',
               '',
-              '_This comment is posted automatically. If you believe this is a mistake, contact a maintainer._',
+              `> ${reasonQuote}`,
+              '',
+              '### ✅ What to do next',
+              '',
+              stepsBlock,
+              '',
+              '### ⚙️ CI & previews',
+              '',
+              '> CI checks and Vercel preview deployments are **not** run for pull requests that bypass issue assignment rules.',
+              '',
+              '---',
+              '',
+              '### 💬 Think this closure is wrong?',
+              '',
+              'If you believe this message was posted **by mistake**, please reach out to the team on **Discord** — the invite link is in our [README](${readmeDiscord}) (Community section).',
+              '',
+              `[Join Checkora on Discord](${discordInvite})`,
+              '',
+              '<sub>🤖 Automated message from PR Guardian · do not reply to this thread for assignment requests — use the issue or Discord instead.</sub>',
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
