@@ -70,6 +70,9 @@
             let currentPuzzleFen = null;
             let puzzleAnalyzing = false;
             let stockfishWorker = null;
+    
+            let hintLevel = 0;
+
             let expectedMoveEval = null;
             let evaluationCache = {};
             let currentDifficulty = 'medium';
@@ -235,6 +238,54 @@
                 }
             }
     
+            function clearPuzzleHints() {
+                hintLevel = 0;
+
+                document.querySelectorAll(".square").forEach(square => {
+                    square.classList.remove("hint-source");
+                    square.classList.remove("hint-target");
+                });
+            }
+
+            function showPuzzleHint() {
+                if (!dailyPuzzleMode || !currentPuzzle) return;
+
+                const move = currentPuzzle.solution[puzzleMoveIndex];
+
+                if (!move) return;
+
+                const fromFile = move.charCodeAt(0) - 97;
+                const fromRank = 8 - parseInt(move[1], 10);
+
+                const toFile = move.charCodeAt(2) - 97;
+                const toRank = 8 - parseInt(move[3], 10);
+
+                clearPuzzleHints();
+                const sourceSq = sq(fromRank, fromFile);
+                const targetSq = sq(toRank, toFile);
+
+                if (hintLevel === 0) {
+
+                    if (sourceSq) {
+                        sourceSq.classList.add("hint-source")
+                    };
+
+                    hintLevel = 1;
+
+                } else if (hintLevel === 1) {
+
+                    if (sourceSq) {
+                        sourceSq.classList.add("hint-source");
+                    }
+
+                    if (targetSq) {
+                        targetSq.classList.add("hint-target");
+                    }
+
+                    hintLevel = 2;
+                }
+            }
+    
             function getCurrentWeeklyPuzzle() {
 
                 const today = new Date();
@@ -365,10 +416,17 @@
 
                 document.getElementById("streak-counter").style.display = "block";
                 updateStreakDisplay();
+
                 if (restartPuzzleBtn) {
                     restartPuzzleBtn.style.display = 'block';
                 }
+
+                if (hintPuzzleBtn) {
+                    hintPuzzleBtn.style.display = 'block';
+                }
+
                 puzzleMoveIndex = 0;
+                clearPuzzleHints();
 
                 await startNewGame(
                     "pvp",
@@ -397,12 +455,15 @@
             let flipped = false;
             let autoFlip = false;
 
-            const SOUND_BASE_URL = window.SOUND_BASE_URL || '/static/game/sounds/';
-            const sounds = {
-              move:    new Audio(`${SOUND_BASE_URL}move.wav`),
-              capture: new Audio(`${SOUND_BASE_URL}capture.mp3`),
-              check:   new Audio(`${SOUND_BASE_URL}check.wav`),
-              draw:    new Audio(`${SOUND_BASE_URL}draw.mp3`),
+           const sounds = {
+           move:     new Audio(`${SOUND_BASE_URL}move.wav`),
+           capture:  new Audio(`${SOUND_BASE_URL}capture.mp3`),
+           check:    new Audio(`${SOUND_BASE_URL}check.wav`),
+           draw:     new Audio(`${SOUND_BASE_URL}draw.mp3`),
+           win:      new Audio(`${SOUND_BASE_URL}win.mp3`),
+           loss:     new Audio(`${SOUND_BASE_URL}loss.mp3`),
+           gameDraw: new Audio(`${SOUND_BASE_URL}draw_end.mp3`),
+           timeout:  new Audio(`${SOUND_BASE_URL}timeout.mp3`),
             };
 
             let soundEnabled = true;
@@ -457,6 +518,34 @@
                 }
             }
 
+            function playGameOverSound(reason, resultState) {
+                if (!soundEnabled) return;
+
+
+                let sound = null;
+
+                if (reason === 'stalemate' || reason === 'draw') {
+                sound = sounds.gameDraw;
+                } else if (reason === 'timeout') {
+                sound = sounds.timeout;
+                }
+            
+                else if (reason === 'checkmate' || reason === 'resign') {
+                if (resultState === 'defeat') {
+                sound = sounds.loss;
+                } else {
+                sound = sounds.win;
+                }
+            }
+
+                
+                if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch((e) => console.log('Sound play error:', e));
+                }
+            }
+
+
             /* ==========================================================
             DOM REFERENCES
             ========================================================== */
@@ -504,6 +593,7 @@
             const newAIBtn = document.getElementById('newAIBtn');
             const dailyPuzzleBtn = document.getElementById('dailyPuzzleBtn');
             const restartPuzzleBtn = document.getElementById('restartPuzzleBtn');
+            const hintPuzzleBtn = document.getElementById('hintPuzzleBtn');
             const newFenBtn = document.getElementById('newFenBtn');
 
             const fenOverlay = document.getElementById('fenOverlay');
@@ -1065,7 +1155,6 @@
                         d.onclick = () => onClick(r, c);
                         d.oncontextmenu = (e) => {
                             e.preventDefault();
-                            e.stopPropagation();
                             toggleSquareHighlight(r, c);
                         };
                         d.ondragover = e => e.preventDefault();
@@ -1464,6 +1553,15 @@
                             board = parseBoard(data.board);
                             turn = data.current_turn;
 
+                            const hasThreefoldWarning = data.threefold_warning;
+
+                            if (hasThreefoldWarning) {
+                                showStatus(
+                                    '⚠️ This position has appeared twice. One more repetition will trigger a draw.',
+                                    false
+                                );
+                            }
+                            
                             // Daily Puzzle Validation
                             if (dailyPuzzleMode && currentPuzzle && !puzzleAnalyzing) {
 
@@ -1475,6 +1573,8 @@
                                     currentPuzzle.solution[puzzleMoveIndex];
 
                                 if (playedMove === expectedMove) {
+
+                                    clearPuzzleHints();
 
                                     puzzleMoveIndex++;
                                     currentPuzzleFen = data.fen;
@@ -1588,6 +1688,9 @@
                             a11yMsg = `${capturer} captured ${capturedColor}'s ${pieceName} on ${targetSquare}. `;
                         } else if (data.move_history && data.move_history.length > 0) {
                             const lastMove = data.move_history[data.move_history.length - 1].notation;
+                            if (window.checkLessonMove && lastMove) {
+                                window.checkLessonMove(lastMove);
+                            }
                             a11yMsg = `${playedColor} played ${lastMove}. `;
                         }
 
@@ -1600,7 +1703,9 @@
                                 a11yMsg += checkMsg;
                             } else {
                                 highlightCheck();
-                                showStatus('', false);
+                                if (!hasThreefoldWarning) {
+                                    showStatus('', false);
+                                }
                             }
                             if (a11yMsg) announceMove(a11yMsg);
                         }
@@ -1676,7 +1781,14 @@
                             const mv = data.ai_move;
                             await animateMove(mv.from_row, mv.from_col, mv.to_row, mv.to_col);
                             board = parseBoard(data.board);
-                            turn = data.current_turn;
+
+                            if (data.threefold_warning) {
+                                showStatus(
+                                    '⚠️ This position has appeared twice. One more repetition will trigger a draw.',
+                                    false
+                                );
+                            }
+                            
                             lastMove = { from: [mv.from_row, mv.from_col], to: [mv.to_row, mv.to_col] };
                             whiteTime = data.white_time;
                             blackTime = data.black_time;
@@ -1702,6 +1814,9 @@
                             a11yMsg = `${capturer} captured ${capturedColor}'s ${pieceName} on ${targetSquare}. `;
                         } else if (data.move_history && data.move_history.length > 0) {
                             const lastMove = data.move_history[data.move_history.length - 1].notation;
+                            if (window.checkLessonMove && lastMove) {
+                                window.checkLessonMove(lastMove);
+                            }
                             a11yMsg = `AI played ${lastMove}. `;
                         }
 
@@ -1714,7 +1829,9 @@
                                 a11yMsg += checkMsg;
                             } else {
                                 highlightCheck();
-                                showStatus('Your turn.', false);
+                                if (!hasThreefoldWarning) {
+                                    showStatus('Your turn.', false);
+                                }
                             }
                             if (a11yMsg) announceMove(a11yMsg);
 
@@ -1933,6 +2050,16 @@
             UI UPDATES
             ========================================================== */
             function updateTurn() {
+                if (
+                    !turnEl ||
+                    !whiteNameLabel ||
+                    !blackNameLabel ||
+                    !wCapEl ||
+                    !bCapEl
+                ) {
+                    return;
+                }
+                
                 const badge = turnEl;
                 badge.className = 'turn-badge ' + turn;
                 
@@ -2068,7 +2195,11 @@
                 }
                 
                 let isCelebration = (resultState === 'victory');
-            
+                
+                
+                // Play distinct game over sound
+                playGameOverSound(reason, resultState);
+
                 if (reason === 'checkmate') {
                     const winnerName = color === 'white' ? blackNameLabel.textContent : whiteNameLabel.textContent;
                     title = 'Checkmate';
@@ -3262,6 +3393,7 @@
                     errorDiv.style.display = 'none';
                 }
             };
+            if (pveOptions) {
             const colorBtns = pveOptions.querySelectorAll('.color-choice');
             colorBtns.forEach(btn => {
                 btn.onclick = () => {
@@ -3274,7 +3406,7 @@
                     selectedPveColor = btn.dataset.color;
                 };
             });
-
+        } 
             if (startAIBtn) startAIBtn.onclick = async () => {
                 const wNameInput = document.getElementById('whiteNameInput');
                 const errorDiv = document.getElementById('nameError');
@@ -3441,6 +3573,7 @@
                 if (!currentPuzzle) return;
 
                 puzzleMoveIndex = 0;
+                clearPuzzleHints();
 
                 await startNewGame(
                     "pvp",
@@ -3453,6 +3586,11 @@
                     "Puzzle Restarted",
                     false
                 );
+            };
+    
+            if (hintPuzzleBtn)
+                hintPuzzleBtn.onclick = () => {
+                    showPuzzleHint();
             };
     
             if (newFenBtn) newFenBtn.onclick = () => {
