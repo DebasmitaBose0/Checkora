@@ -2581,7 +2581,7 @@ def download_badge(request, achievement_id):
     except (
         FileNotFoundError,
         OSError,
-    ) as exc:
+    ):
         logger.error(
             "Badge generation failed for achievement %s: %s",
             achievement_id,
