@@ -1272,7 +1272,6 @@ def get_client_ip(request):
     return remote_addr
 
 
-
 def normalize_username(username):
     """Normalize the username by stripping whitespace and converting to lowercase."""
     return (username or '').strip().lower()
@@ -1343,7 +1342,6 @@ def increment_counter(key, timeout):
     finally:
         if acquired:
             cache.delete(lock_key)
-
 
 
 def login_view(request):
