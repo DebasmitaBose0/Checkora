@@ -4,6 +4,7 @@ import json
 import time
 import hashlib
 import math
+import ipaddress
 import secrets
 import secrets as secrets_module
 from django.http import HttpResponseServerError
@@ -1253,11 +1254,6 @@ class CustomPasswordResetView(PasswordResetView):
         return response
 
 
-def get_client_ip(request):
-    """Get client IP address safely by parsing trusted proxies."""
-    remote_addr = request.META.get('REMOTE_ADDR', 'unknown')
-import ipaddress
-
 def _is_trusted_proxy(ip_text, trusted_entries):
     """Check if an IP address matches trusted proxy entries (IP or CIDR)."""
     try:
@@ -1275,10 +1271,13 @@ def _is_trusted_proxy(ip_text, trusted_entries):
             continue
     return False
 
+
 def get_client_ip(request):
     """Get client IP address safely by parsing trusted proxies."""
     remote_addr = request.META.get('REMOTE_ADDR', 'unknown')
-    trusted_proxies = getattr(settings, 'TRUSTED_PROXIES', ['127.0.0.1', '::1'])
+    trusted_proxies = getattr(
+        settings, 'TRUSTED_PROXIES', ['127.0.0.1', '::1']
+    )
     if not _is_trusted_proxy(remote_addr, trusted_proxies):
         return remote_addr
 
@@ -1289,7 +1288,6 @@ def get_client_ip(request):
     for hop in reversed(hops):
         if not _is_trusted_proxy(hop, trusted_proxies):
             return hop
-    return remote_addr
     return remote_addr
 
 
