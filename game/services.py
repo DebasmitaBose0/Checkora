@@ -266,6 +266,10 @@ def generate_badge(user_achievement):
             f"Badge template not found: {template_path}"
         )
 
+    badge = Image.open(
+        template_path
+    ).convert("RGBA")
+
     draw = ImageDraw.Draw(badge)
 
     try:
