@@ -1333,32 +1333,34 @@ body {
     }
 }
 
-#privacyModal div[style*="overflow-y:auto"],
-#termsModal div[style*="overflow-y:auto"],
-#disclaimerModal div[style*="overflow-y:auto"],
-#contactModal div[style*="overflow-y:auto"] {
+.modal-scroll-content {
     scrollbar-width: thin;
-    scrollbar-color: #f0c040 #131522;
+    scrollbar-color: var(--accent-gold) #131522;
 }
 
-#privacyModal div[style*="overflow-y:auto"]::-webkit-scrollbar,
-#termsModal div[style*="overflow-y:auto"]::-webkit-scrollbar,
-#disclaimerModal div[style*="overflow-y:auto"]::-webkit-scrollbar,
-#contactModal div[style*="overflow-y:auto"]::-webkit-scrollbar {
+.modal-scroll-content::-webkit-scrollbar {
     width: 12px;
 }
 
-#privacyModal div[style*="overflow-y:auto"]::-webkit-scrollbar-track,
-#termsModal div[style*="overflow-y:auto"]::-webkit-scrollbar-track,
-#disclaimerModal div[style*="overflow-y:auto"]::-webkit-scrollbar-track,
-#contactModal div[style*="overflow-y:auto"]::-webkit-scrollbar-track {
+.modal-scroll-content::-webkit-scrollbar-track {
     background: #131522;
 }
 
-#privacyModal div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb,
-#termsModal div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb,
-#disclaimerModal div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb,
-#contactModal div[style*="overflow-y:auto"]::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #ffeaa7, #f0c040, #d4a020);
+.modal-scroll-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        #ffeaa7,
+        var(--accent-gold),
+        #d4a020
+    );
     border-radius: 999px;
+}
+
+.modal-scroll-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        180deg,
+        #fff1b8,
+        #ffd54f,
+        var(--accent-gold)
+    );
 }
